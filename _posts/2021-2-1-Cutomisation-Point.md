@@ -13,7 +13,7 @@ To simplify the code, all SFINAE and `noexcept` propergations have been omitted.
 
 This is probably the worst option. But let's use it as a baseline. First, we have our algorithm header `my_algo.hpp`
 
-```
+```cpp
 namespace my_lib {
 
 template <typename T>
