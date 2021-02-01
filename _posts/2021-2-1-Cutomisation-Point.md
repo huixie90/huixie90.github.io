@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Customisation point for types (or aliases to) in `std` namespace 
+title: "Customisation point for types (or aliases to) in `std` namespace"
 ---
 
 There are lots of ways of doing customisation points in C++. What is the best way to do customisation points to allow types (or aliases to types) in `std` namespace? Should we ever allow it?
@@ -13,7 +13,7 @@ To simplify the code, all SFINAE and `noexcept` propergations have been omitted.
 
 This is probably the worst option. But let's use it as a baseline. First, we have our algorithm header `my_algo.hpp`
 
-```cpp
+```
 namespace my_lib {
 
 template <typename T>
