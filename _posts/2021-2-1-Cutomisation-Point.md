@@ -182,9 +182,9 @@ int tag_invoke(ti::tag_of<my_cp>, const user::Foo& foo){
 
 This works. Although we can't add `tag_invoke` in `user` namespace, or in `std` namespace, we can still add it in the namespace `my_algo`, where `my_cp` lives.
 
-## `hana` or `tag_invoke`?
+## Template specialisation or `tag_invoke`?
 
-People claim that the `hana` template specialisation approach is too verbose. When you define a type, instead of provide the customisation point as a hidden friend inside the class, you have to close the class curly brace, close the namespace curly brace, and open up the algorithm's namespace.
+People claim that the template specialisation approach is too verbose. When you define a type, instead of provide the customisation point as a hidden friend inside the class, you have to close the class curly brace, close the namespace curly brace, and open up the algorithm's namespace.
 
 But on the other hand, I think it is most flexible. What do you think?
 
