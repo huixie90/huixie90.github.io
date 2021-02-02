@@ -290,4 +290,75 @@ int tag_invoke(tag_of<my_cp>, const user::MyObject& obj){
 } // namespace my_algo
 ```
 
-Now the question is "Is it safe to do so"? Unlike `std::optional<int>`, `MyObject` is a `variant` of specific set of 3 different types. So the question really is, can I claim the ownership of this `variant`? I tend to believe that I can claim the ownership. The argument against it is that it is possible that another person create the same `variant` and provide its own customisation point for it and we have ODR violation. I think if we are going down this route, nothing can stop ODR violation. Even if you write a wrapper to the `std::variant`, and provide the customisation point for your wrapper somewhere (and possibly in a cpp file where you call the algorithm). Another person can still include your wrapper header and add a customisation point in his own cpp file. Boom, ODR violation.
+Now the question is "Is it safe to do so"?  
+
+The argument against it is that it is possible that another person create the same `variant` and provide its own customisation point for it and we have ODR violation. Here is an example, which I shamelessly copied from the [stack overflow answer mentioned earlier](https://stackoverflow.com/a/65331023/10915786). One person can do this and use it happily.
+
+```cpp
+using IntSet = std::set<int>;
+template<> struct std::hash<IntSet> {
+    size_t operator()(const IntSet& s) const { return s.size(); }
+};
+```
+
+At the same time, their colleague does this:
+
+```cpp
+using MySet = std::set<int>;
+template<> struct std::hash<MySet> {
+    size_t operator()(const MySet& s, size_t h = 0) const {
+        for (int i : s) h += std::hash<int>()(i);
+        return h;
+    }
+};
+```
+
+Boom. ODR Violation.
+
+OK. But on the other hand, unnlike `std::optional<int>` (or `std::set<int>`), `MyObject` is a `variant` of specific set of 3 different types. So the question really is, can I claim the ownership of this `variant`? I tend to believe that I can claim the ownership. I think if we are going down the ODR violation route, nothing can stop ODR violation. Even if you write a wrapper to the `std::variant`, and provide the customisation point for your wrapper somewhere (and possibly in a cpp file where you call the algorithm). Another person can still include your wrapper header and add a customisation point in his own cpp file. Boom, ODR violation.
+
+Working in a large code base with tens of millions of loc, one can only own a handle of types and uses a large number of other people's types. If we are going to wrap every single other people's class, it is going to make our already bloated code base even more bloated. One thing nice about generic programming and customisation point is that you can take any types and add behaviours to it. If we are going to wrap every single class we are using, it will become identical to the tranditional Java OO style.
+
+```cpp
+namespace user {
+
+struct MyObject{
+
+    /* implicit */ MyObject(team1::Foo);
+    /* implicit */ MyObject(team2::Bar);
+    /* implicit */ MyObject(team3::Buz);
+
+    std::variant<team1::Foo, team2::Bar, team3::Buz> obj_;
+
+    friend int tag_invoke(tag_of<my_lib::my_cp>, const MyObject& obj){
+        // ...
+    }
+
+    // attempt to make it like a variant except it doesn't work
+    template<typename Visitor, typename... Obj>
+    friend decltype(auto) visit(Visitor&& v, Obj&&... obj){
+        return std::visit(v, static_cast<Obj&&>(obj).obj_...);
+    }
+
+};
+
+} // namespace user
+```
+
+Does this look familar? Yes, it is just a wrapper. And it looks similar to the Java code here except that it doesn't work
+
+```java
+public class MyObject implements my_cpable, visitable{
+    private final visitable fVariant;
+
+    @override
+    public void visit(Visitor v){
+        fVariant.visit(v);
+    }
+
+    @override
+    public int my_cp(){
+        // ...
+    }
+}
+```
