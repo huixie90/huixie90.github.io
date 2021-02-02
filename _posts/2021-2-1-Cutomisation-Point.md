@@ -5,9 +5,9 @@ title: "Customisation point for types (or aliases to) in `std` namespace"
 
 There are lots of ways of doing customisation points in C++. What is the best way to do customisation points to allow types (or aliases to types) in `std` namespace? Should we ever allow it?
 
-Let's say we are writing a generic algorithm called `my_algo`, which calls a customistion point function `my_cp`. Let's see how we can (or cannot) do it in different ways.
+Let's say we are writing a generic algorithm called `my_algo`, which calls a customisation point function `my_cp`. Let's see how we can (or cannot) do it in different ways.
 
-To simplify the code, all SFINAE and `noexcept` propergations have been omitted.
+To simplify the code, all SFINAE and `noexcept` propagations have been omitted.
 
 ## ADL
 
@@ -29,7 +29,7 @@ auto my_algo(const T& t){
 
 The algorithm makes an unqualified call to the customisation point function `my_cp`. It requires its users to provide the definition of `my_cp` though ADL.
 
-Now we have a user to use the algorithm with a type `Foo`. They may or maynot own this type. Anyway, they might try to add the customisation point `my_cp` to the namespace of `Foo` to enable ADL.
+Now we have a user to use the algorithm with a type `Foo`. They may or may not own this type. Anyway, they might try to add the customisation point `my_cp` to the namespace of `Foo` to enable ADL.
 
 ```cpp
 namespace user {
@@ -51,11 +51,11 @@ int main(){
 
 ```
 
-This looks like that it is working. But unfortunetely, it isn't. Because `Foo` is actually not in `user` namespace, but in `std` namespace. `my_cp(const Foo&)` won't be found by ADL as its namespace is not the same as the argument's namespace. So what can the user do? Add `my_cp` in `std` namespace? That is an undefined behaviour. So with ADL there is no way to do this.
+This looks like that it is working. But unfortunately, it isn't. Because `Foo` is actually not in `user` namespace, but in `std` namespace. `my_cp(const Foo&)` won't be found by ADL as its namespace is not the same as the argument's namespace. So what can the user do? Add `my_cp` in `std` namespace? That is an undefined behaviour. So with ADL there is no way to do this.
 
 ## `boost::hana` Way
 
-`boost::hana` uses template specialisation throughout its code base. In addition to template specialisation, it uses tag-dispatch as another layer of indirection to allow dispatching multiple unrelated types into the same category, and then only provide the speicialisation for that category. To simplify how template speicialisation is used, tag-dispatch layer is removed in this example.
+`boost::hana` uses template specialisation throughout its code base. In addition to template specialisation, it uses tag-dispatch as another layer of indirection to allow dispatching multiple unrelated types into the same category, and then only provide the specialisation for that category. To simplify how template specialisation is used, tag-dispatch layer is removed in this example.
 
 Let's look at the algorithm header `my_algo.hpp` first.
 
@@ -194,7 +194,7 @@ As [Arthur O'Dwyer](https://quuxplusone.github.io/blog/) pointed out in this [St
 
 In my example, it is `std::optional<int>`. It will lead to ODR violation at some point, because it is type that everyone will use. But in the real world, it won't be `int`. It can be some custom types. The class template in `std` namespace is not only `optional`, it can be anything, e.g. `variant`
 
-There are different senarios.
+There are different scenarios.
 
 ### We own the types
 
@@ -218,7 +218,7 @@ using MyObject = std::variant<Foo, Bar, Buz>;
 } // namespace user
 ```
 
-I am using `MyObject` with visitors thoughout the code base and I have control of `Foo`, `Bar`, and `Buz`. And now I'd like to use it in a generic algorithm `my_algo`. Nothing should stop me directly using this alias in the algorithm. Indeed, ADL in this case will just work because the template parameters' namespaces are also in the ADL namespace set.
+I am using `MyObject` with visitors throughout the code base and I have control of `Foo`, `Bar`, and `Buz`. And now I'd like to use it in a generic algorithm `my_algo`. Nothing should stop me directly using this alias in the algorithm. Indeed, ADL in this case will just work because the template parameters' namespaces are also in the ADL namespace set.
 
 ```cpp
 namespace user {
@@ -269,7 +269,7 @@ using MyObject = std::variant<team1::Foo, team2::Bar, team3::Buz>;
 } // namespace user
 ```
 
-Things get trickier. Let's say I've already used `MyObject` thoughout my code base (with `std::visit` everywhere). Wrapping it into my own type and update the usage is not that easy. If we'd like to add customisation point to `my_cp`, where should we add it? Options are:
+Things get trickier. Let's say I've already used `MyObject` throughout my code base (with `std::visit` everywhere). Wrapping it into my own type and update the usage is not that easy. If we'd like to add customisation point to `my_cp`, where should we add it? Options are:
 
 - `user` namespace. This won't work because `MyObject` is in `std` namespace
 - `std` namespace. This is no no
@@ -315,9 +315,9 @@ template<> struct std::hash<MySet> {
 
 Boom. ODR Violation.
 
-OK. But on the other hand, unnlike `std::optional<int>` (or `std::set<int>`), `MyObject` is a `variant` of specific set of 3 different types. So the question really is, can I claim the ownership of this `variant`? I tend to believe that I can claim the ownership. I think if we are going down the ODR violation route, nothing can stop ODR violation. Even if you write a wrapper to the `std::variant`, and provide the customisation point for your wrapper somewhere (and possibly in a cpp file where you call the algorithm). Another person can still include your wrapper header and add a customisation point in his own cpp file. Boom, ODR violation.
+OK. But on the other hand, unlike `std::optional<int>` (or `std::set<int>`), `MyObject` is a `variant` of specific set of 3 different types. So the question really is, can I claim the ownership of this `variant`? I tend to believe that I can claim the ownership. I think if we are going down the ODR violation route, nothing can stop ODR violation. Even if you write a wrapper to the `std::variant`, and provide the customisation point for your wrapper somewhere (and possibly in a cpp file where you call the algorithm). Another person can still include your wrapper header and add a customisation point in his own cpp file. Boom, ODR violation.
 
-Working in a large code base with tens of millions of loc, one can only own a handful of types and uses a large number of other people's types. If we are going to wrap every single other people's class, it is going to make our already bloated code base even more bloated. One thing nice about generic programming and customisation point is that you can take any types and add behaviours to it. If we are going to wrap every single class we are using, it will become identical to the tranditional Java OO style.
+Working in a large code base with tens of millions of loc, one can only own a handful of types and uses a large number of other people's types. If we are going to wrap every single other people's class, it is going to make our already bloated code base even more bloated. One thing nice about generic programming and customisation point is that you can take any types and add behaviours to it. If we are going to wrap every single class we are using, it will become identical to the traditional Java OO style.
 
 ```cpp
 namespace user {
@@ -335,6 +335,8 @@ struct MyObject{
     }
 
     // attempt to make it look like a variant except that it doesn't work
+    // because all clients are already using std::visit and this is not
+    // std::visit
     template<typename Visitor, typename... Obj>
     friend decltype(auto) visit(Visitor&& v, Obj&&... obj){
         return std::visit(v, static_cast<Obj&&>(obj).obj_...);
@@ -345,7 +347,7 @@ struct MyObject{
 } // namespace user
 ```
 
-Does this look familar? Yes, it is just a wrapper. And it looks similar to the Java code here except that it doesn't work
+Does this look familiar? Yes, it is just a wrapper. And it looks similar to the Java code here except that it doesn't work
 
 ```java
 public class MyObject implements my_cpable, visitable{
