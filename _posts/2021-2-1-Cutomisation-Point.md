@@ -317,7 +317,7 @@ Boom. ODR Violation.
 
 OK. But on the other hand, unnlike `std::optional<int>` (or `std::set<int>`), `MyObject` is a `variant` of specific set of 3 different types. So the question really is, can I claim the ownership of this `variant`? I tend to believe that I can claim the ownership. I think if we are going down the ODR violation route, nothing can stop ODR violation. Even if you write a wrapper to the `std::variant`, and provide the customisation point for your wrapper somewhere (and possibly in a cpp file where you call the algorithm). Another person can still include your wrapper header and add a customisation point in his own cpp file. Boom, ODR violation.
 
-Working in a large code base with tens of millions of loc, one can only own a handle of types and uses a large number of other people's types. If we are going to wrap every single other people's class, it is going to make our already bloated code base even more bloated. One thing nice about generic programming and customisation point is that you can take any types and add behaviours to it. If we are going to wrap every single class we are using, it will become identical to the tranditional Java OO style.
+Working in a large code base with tens of millions of loc, one can only own a handful of types and uses a large number of other people's types. If we are going to wrap every single other people's class, it is going to make our already bloated code base even more bloated. One thing nice about generic programming and customisation point is that you can take any types and add behaviours to it. If we are going to wrap every single class we are using, it will become identical to the tranditional Java OO style.
 
 ```cpp
 namespace user {
@@ -334,7 +334,7 @@ struct MyObject{
         // ...
     }
 
-    // attempt to make it like a variant except it doesn't work
+    // attempt to make it look like a variant except that it doesn't work
     template<typename Visitor, typename... Obj>
     friend decltype(auto) visit(Visitor&& v, Obj&&... obj){
         return std::visit(v, static_cast<Obj&&>(obj).obj_...);
