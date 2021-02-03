@@ -14,8 +14,8 @@ layout: default
   </div>
 
   {% if page.comments_id %}
-  {% include comments.html %}
-{% endif %}
+    {% include comments.html issue_id=page.comments_id %}
+  {% endif %}
 
   {% include disqus.html %}
 </article>
