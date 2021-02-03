@@ -47,9 +47,9 @@ class MyObject{
     template <typename Visitor, typename... MyObjects>
         requires (std::same_as<std::decay_t<MyObjects>, MyObject> && ...)
     friend constexpr decltype(auto) visit(Visitor&& visitor, 
-                                          MyObject&&... objs){
+                                          MyObjects&&... objs){
         return std::visit(static_cast<Visitor&&>(visitor), 
-                          static_cast<MyObject&&>(objs).variant_ ...);
+                          static_cast<MyObjects&&>(objs).variant_ ...);
     }
 };
 
