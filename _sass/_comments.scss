@@ -40,7 +40,7 @@ $font-families: (
 );
 
 $font-size-scale: 1.125;
-$font-size-base: 1.8rem;
+$font-size-base: 1rem;
 
 // Inspiration: https://stackoverflow.com/a/49437769/5323344
 @mixin transition($props...) {
@@ -225,6 +225,7 @@ $meta-spacing: 0.8rem;
 }
 
 .comment-author-badge {
+  background-color: lightgray;
   border-radius: 0.2rem;
   display: flex;
   align-items: center;
