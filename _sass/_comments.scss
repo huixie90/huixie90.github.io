@@ -1,3 +1,156 @@
+$zIndex: (
+  navbar: 10,
+);
+@function toRem($px) {
+  $rem: $px / 18px;
+  @return #{$rem}rem;
+}
+
+@function z-index($key) {
+  @return map-get($zIndex, $key);
+}
+
+@function pow($base, $exponent) {
+  $result: 1;
+
+  @if $exponent > 0 {
+    @for $i from 1 through $exponent {
+      $result: $result * $base;
+    }
+  } @else if $exponent < 0 {
+    @for $i from $exponent to 0 {
+      $result: $result / $base;
+    }
+  }
+
+  @return $result;
+}
+  
+$font-weights: (
+  light: 300,
+  regular: 400,
+  semiBold: 500,
+  bold: 700
+);
+
+$font-families: (
+  sans: 'Fira Sans, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif',
+  mono: 'Inconsolata, Monaco, Consolas, Courier New, monospace',
+  cursive: 'Reenie Beanie, cursive'
+);
+
+$font-size-scale: 1.125;
+$font-size-base: 1.8rem;
+
+// Inspiration: https://stackoverflow.com/a/49437769/5323344
+@mixin transition($props...) {
+  $result: ();
+
+  @for $i from 1 through length($props) {
+    $prop: nth($props, $i);
+    $result: append($result, $prop);
+    $result: append($result, ease #{var(--transition-duration)});
+
+    @if $i != length($props) {
+      $result: append(
+        $result,
+        unquote(
+          $string: ',',
+        )
+      );
+    }
+  }
+
+  transition: $result;
+}
+
+@mixin headings {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @content;
+  }
+}
+
+@mixin z-index($key) {
+  z-index: z-index($key);
+}
+
+@mixin font-family($family) {
+  font-family: unquote(map-get($font-families, $family));
+}
+
+@mixin font-weight($humanReadableWeight: inherit) {
+  font-weight: map-get($font-weights, $humanReadableWeight);
+}
+
+@mixin font-size($step) {
+  $font-size: $font-size-base * pow($font-size-scale, $step);
+  $line-height: -0.027 * ($font-size / 1rem * 10) + 2.266;
+  // expose CSS var to later compute other things, e.g., spacing
+  --line-height: #{$line-height};
+  font-size: $font-size;
+  line-height: var(--line-height);
+}
+
+@mixin underlined-link($initially-underlined: true) {
+  @if $initially-underlined {
+    text-decoration: underline;
+
+    &:hover,
+    &:focus {
+      text-decoration: none;
+    }
+  } @else {
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}
+
+@mixin themed($attribute, $light, $dark) {
+  #{$attribute}: $light;
+
+  .dark & {
+    #{$attribute}: $dark;
+  }
+}
+
+@mixin selection-resistant-color($color) {
+  &,
+  &::selection {
+    color: $color;
+  }
+}
+
+@mixin centered($margin-min: 2.4rem, $content-max: var(--page-max-width)) {
+  display: grid;
+  grid-template-columns: minmax($margin-min, 1fr) minmax(0, $content-max) minmax($margin-min, 1fr);
+
+  > * {
+    grid-column: 2;
+  }
+}
+
+@mixin responsive-grid($mobile-min, $desktop-min, $mobile-max: 1fr, $desktop-max: 1fr, $desktop-breakpoint: 600px) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($mobile-min, $mobile-max));
+
+  @media only screen and (min-width: $desktop-breakpoint) {
+    grid-template-columns: repeat(auto-fit, minmax($desktop-min, $desktop-max));
+  }
+}
+
+@mixin rhythm() {
+  display: grid;
+  grid-row-gap: calc(var(--line-height) * 1em);
+}
 
 .comment-actions {
   display: flex;
