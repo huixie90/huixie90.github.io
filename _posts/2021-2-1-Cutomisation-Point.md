@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "Customisation point for types (or aliases to) in `std` namespace"
+comments_id: 2
 ---
 
 There are lots of ways of doing customisation points in C++. What is the best way to do customisation points to allow types (or aliases to types) in `std` namespace? Should we ever allow it?

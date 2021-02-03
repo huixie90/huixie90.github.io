@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "What If Everything Is a Customisation Point ?"
+comments_id: 3
 ---
 
 Following up my [previous post](https://huixie90.github.io/Cutomisation-Point/), there are some arguments saying that I should just write a wrapper of the `std` types. OK, let's do it.
