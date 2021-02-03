@@ -20,7 +20,7 @@ Imagine this code is there for a while, and we have some usages of the alias def
 For some reasons, we need to make it an actual class today instead of a type alias to `std::variant`. Those reasons can be:
 
 - Gain full control of the type. e.g. Not exposing some behaviours such as `std::get`. If the alias is used in public APIs to encapsulate the implementation details, it will never work. Because the clients will depend on every single observable behaviour of `std::variant`, rather than your documented API.
-- Allow adding customisation points to some algorithms that requires ADL. If it is an alias, it is actually in `std` namespace. Adding customisation points to `std` namespace is not allowed
+- Allow adding customisation points to some algorithms that requires ADL. If it is an alias, it is actually in `std` namespace. Adding customisation points to `std` namespace is not allowed. Adding behaviours to our own type is safer that adding behaviours to a type we don't own.
 - Allow forward declaration `class MyObject;`. This is useful when you work in a large legacy code base. For this alias, we need to include the header `variant`, `Foo`, `Bar`, and `Buz`. Imagine including the definition header of `Foo` will pull up a million of lines of code (I am not joking). Having a forward declaration of `MyObject` will be very useful when you don't need the full definition of it.
 
 At the same time, while we are refactoring, we don't want to break all the code that uses this class. Let's make an attempt.
@@ -150,13 +150,13 @@ class MyObject{
 
 Now we can call `std::visit` on our type as if it were a `std::variant`. Is it useful? Well it is useful in this particular refactoring example. One could argue the refactoring can be avoided by not using `std::variant` in the API at the first place. But that argument cannot convince me completely as what it suggested is that one should never use any types that they don't own in public APIs, including `std::variant`, `std::optional`, `std::vector`, `std::string`, ...
 
-If we continue explore the possibility of customisation points, `std::variant` is just a start. Next obvious thing is `std::optional`. It seems that we can never add customisation points to the API because all APIs are member functions. There are two which makes `optional` and `optional`: `operator bool` and `operator*`. Perhaps we can have these two as customisation points
+If we continue explore the possibility of customisation points, `std::variant` is just a start. Next obvious thing is `std::optional`. It seems that we can never add customisation points to the API because all APIs are member functions. There are two things which I think make `optional` an `optional`: `operator bool` and `operator*`. Perhaps we can have these two as customisation points
 
 - `is_just := Optional<T> -> bool`
 - `get_just := Optional<T> -> T`
 
 The downside is that this will make the API harder to use.
 
-Next let's look at `std::vector`. The first impression might be, omg, the interface is too rich and it is impossible to make all of them customisation points. Well, look at `boost::graph` library, you will find that this is not impossible. Lots of operations in `std::vector` are actually already customisation points, such as `ranges::begin`, `ranges::end`, `ranges::size`, etc ...
+Next let's look at `std::vector`. The first impression might be, omg, the interface is too rich and it is impossible to make all of them customisation points. Well, look at `boost::graph` library, you will find that this is not impossible. Lots of operations in `std::vector` are actually already customisation points, such as `ranges::begin`, `ranges::end`, `ranges::size`, etc ... We can start with simple concepts, such as `range`. And then adding more behaviours to it and make it `forward_range`, `random_access_range`, `container`, etc ...
 
 What if everything is a customisation point? I don't know. One thing I know is that this will never happen.
