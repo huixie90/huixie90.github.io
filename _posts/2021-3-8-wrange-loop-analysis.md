@@ -148,15 +148,15 @@ Can I just get my `const auto&` back please?
 Consider the following example,
 
 ```cpp
-    using ranges::views::zip;
+using ranges::views::zip;
 
-    std::vector<int> ages{1,2,3};
-    std::vector<std::string> names{"Alice","Bob","Charles"};
+std::vector<int> ages{1,2,3};
+std::vector<std::string> names{"Alice","Bob","Charles"};
 
-    for(const auto& [age, name] : zip(ages, names)){
-        age = 0;
-        name = "null";
-    }
+for(const auto& [age, name] : zip(ages, names)){
+    age = 0;
+    name = "null";
+}
 ```
 
 [Godbolt](https://godbolt.org/z/1zPjaT)
