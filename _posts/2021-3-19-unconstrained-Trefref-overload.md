@@ -122,16 +122,121 @@ This is the exact same problem. Our `foo` is not `const` and the overload that t
 
 What is going wrong in this case?
 
-Same argument for the `const`. It would be nice if we can declare `foo` at the first place but it is not always the case.
+Same argument for the `const`. It would be nice if we can declare `foo` as a `const` at the first place but it is not always possible.
 
 Some would argue mixing functions with function templates is not a good idea. But this is very hard to avoid especially when they are declared in different headers and even more annoying, when ADL is involved.
+
+Imagine this code
+
+```cpp
+// in lib.hpp
+namespace lib{
+
+struct Foo{};
+
+} // namespace lib
+
+// in client.hpp
+// #include "lib.hpp"
+namespace client{
+
+void call(const lib::Foo&){
+    std::cout << "call client call(const Foo&)\n";
+}
+
+void run(){
+    lib::Foo foo{};
+    call(foo);
+    // use foo a bit more maybe call non-const functions
+}
+
+} // namespace client
+
+// in main.cpp
+int main(){
+    client::run();
+}
+```
+
+[godbolt](https://godbolt.org/z/ha8MTr)
+
+Our `client::call(const Foo&)` is called and everything works, until one day, the owner of `lib.hpp` decide to add a `call` that takes `T&&`.
+
+```cpp
+// in lib.hpp
+namespace lib{
+
+struct Foo{};
+
+template <typename T>
+void call(T&&){
+    std::cout << "lib::call(T&&)\n";
+}
+
+} // namespace lib
+
+// in client.hpp
+// #include "lib.hpp"
+namespace client{
+
+void call(const lib::Foo&){
+    std::cout << "call client::call(const Foo&)\n";
+}
+
+void run(){
+    lib::Foo foo{};
+    call(foo);
+    // use foo a bit more
+}
+
+} // namespace client
+
+// in main.cpp
+int main(){
+    client::run();
+}
+```
+
+[godbolt](https://godbolt.org/z/8n4EKn)
+
+Now the `client::run` silently call the `lib::call(T&&)` without any compiler errors/warnings.
 
 Are there other options? Well, if the author of `call(const Foo&)` know that there is already an overload that takes `T&&`, they could add another overload `call(Foo&)`, which does not look very nice neither.
 
 The only thing we can do is probably to make the function template not to take unconstrained `T&&`. We can add constraints to the type `T` either with concepts or SFINAE. But this is also hard because the function template writer usually don't know the existence of type `Foo`. The constraints might not also exclude the type `Foo`.
 
-So the take away for this case is that we should avoid getting into this situation.
+So the take away for this case is that using unconstrained T&& judiciously.
 
 ## Constructors
 
 The most common cases for overload sets are constructors. Because our compiler will generate a bunch of overloads.
+
+If you are writing an implicit constructor that takes unconstrained `T&&`, you are in trouble. Consider,
+
+```cpp
+struct Foo{
+    template <typename T>
+    Foo(T&&){
+        std::cout << "Foo(T&&)\n";
+    }
+    Foo(const Foo&) = default;
+};
+
+void call(Foo){
+    // take Foo by copy
+}
+
+int main(){
+    Foo foo{5};
+    call(foo);
+}
+```
+
+Unsurprisingly the output is
+
+```cpp
+Foo(T&&)
+Foo(T&&)
+```
+
+Yes, our template constructor is called twice. This is because, when we call `call(foo)`, it will try to make a copy because the function is taking argument by value. Our template constructor `Foo(T&&)` is a better match than the compiler generated copy constructor, because, obviously, our input `foo` is not `const`, and copy constructor takes argument by `const Foo&`. So our `Foo(T&&)` is called when the copy happens.
