@@ -90,7 +90,7 @@ Now both overloads takes arguments by `const` reference. But the first overload 
 
 [godbolt](https://godbolt.org/z/deKzW4)
 
-If the fallback needs to modify the obj, it can take it by `auto&`
+If the fallback needs to modify the obj, then you need to do more work
 
 So the first take away is: never use `boost::hana::always` inside `boost::hana::overload`
 
